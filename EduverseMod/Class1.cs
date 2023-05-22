@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
 using MelonLoader;
@@ -15,12 +16,15 @@ namespace MeduverseMod
         public static bool FlyHack;
         public static bool SpeedHack;
         public static bool JumpHack;
+        public static bool TimeHack;
         public static bool AutoTypeCertificate;
         public static bool AutoTypeContest;
-
+        public static bool AntiCheat;
+        
         public static float JumpHeight;
         public static float WalkSpeed;
-        
+        public static float GameTime;
+
         private GUIWindow _window;
         private bool _enableMenu;
         public override void OnInitializeMelon()
@@ -37,16 +41,22 @@ namespace MeduverseMod
         public override void OnUpdate()
         {
             _enableMenu = Input.GetKeyDown(KeyCode.RightShift) ? !_enableMenu : _enableMenu;
+            if(TimeHack) Time.timeScale = GameTime;
         }
         private void GUIBuilder()
         {
             _window = GUIWindow.Begin("Cheat Menu");
             _window.Toggle("Flight", (value) => FlyHack = value);
-            _window.Toggle("Auto Type Certificate", (value) => AutoTypeCertificate = value);
-            _window.Toggle("Auto Type Contest", (value) => AutoTypeContest = value);
+            _window.Toggle("Auto Type Certificate", (value) => AutoTypeCertificate = value, true);
+            _window.Toggle("Auto Type Contest", (value) => AutoTypeContest = value, true);
+            _window.Toggle("Anti AntiCheat", (value) => AntiCheat = value, true);
             _window.Toggle("Speed hack", (value) => SpeedHack = value);
             _window.Toggle("Jump Boost", (value) => JumpHack = value);
-            _window.FloatField("Speed", (value) => WalkSpeed = value, 2f);
+            _window.Toggle("Enable Time Hack", (value) => TimeHack = value);
+
+            _window.FloatField("Speed", (value) => WalkSpeed = value, 4f);
+            _window.FloatField("Jump Height", (value) => JumpHeight = value, 4f);
+            _window.FloatField("Time Machine",(value) => GameTime = value, 1f);
             // _window.FloatField("FloatField:", (value) => , speed);
             // _window.Label("Label");
             // _window.Button("Button!", () => Debug.Log("Button has been pressed!"));
@@ -67,7 +77,6 @@ namespace MeduverseMod
     [HarmonyPatch(typeof(vThirdPersonInput), "JumpConditions")]
     public static class FlyPatch
     {
-        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public static bool Prefix(ref bool __result)
         {
             if (MeduverseHacking.FlyHack)
@@ -83,9 +92,18 @@ namespace MeduverseMod
     {
         public static void Prefix(ref vThirdPersonMotor.vMovementSpeed __0)
         {
-            __0.walkSpeed = MeduverseHacking.WalkSpeed;
-            __0.runningSpeed = MeduverseHacking.WalkSpeed;
-            __0.sprintSpeed = MeduverseHacking.WalkSpeed;
+            if (MeduverseHacking.SpeedHack)
+            {
+                __0.walkSpeed = MeduverseHacking.WalkSpeed;
+                __0.runningSpeed = MeduverseHacking.WalkSpeed;
+                __0.sprintSpeed = MeduverseHacking.WalkSpeed;
+            }
+            else
+            {
+                __0.walkSpeed = 2f;
+                __0.runningSpeed = 4f;
+                __0.sprintSpeed = 6f;
+            }
         }
     }
     [HarmonyPatch(typeof(TypingGame), "OnClickShoot")]
@@ -117,8 +135,18 @@ namespace MeduverseMod
     {
         public static void Prefix(vThirdPersonMotor __instance)
         {
-            if(MeduverseHacking.JumpHack) __instance.jumpHeight = MeduverseHacking.JumpHeight;
+            __instance.jumpHeight = MeduverseHacking.JumpHack ? MeduverseHacking.JumpHeight : 4f;
         }
     }
-    // 23-43
+
+    [HarmonyPatch(typeof(TypingGame), "EndCerfiticate")]
+    public static class AntiCheatPatch
+    {
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            if(MeduverseHacking.AntiCheat) for (var i = 23; i <= 43; i++) codes[i].opcode = OpCodes.Nop;
+            return codes;
+        }
+    }
 } 
