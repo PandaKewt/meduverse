@@ -6,7 +6,10 @@ Compile phần mềm và copy file EduverseMod.dll vào Mod và file UrGUI.dll v
 
 Bấm RShift để mở menu
 
-##Video 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=0KBCuC-uS08
-" target="_blank"><img src="http://img.youtube.com/vi/0KBCuC-uS08/0.jpg" 
-alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
+
+Video
+-----
+
+
+https://github.com/PandaKewt/meduverse/assets/34622654/2744822e-9240-41a5-bf55-b4b7f9b5fd78
+
